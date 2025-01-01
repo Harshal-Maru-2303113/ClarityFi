@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+
 import { pool } from "../config/database";
 import { sendOTP, verifyOTP } from "../utils/emailService";
 const saltRounds = 10;
@@ -19,12 +20,12 @@ const hashPassword = async (password: string) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-
+    console.dir(req.body);
     const [users]: any = await pool.query(
-      "SELECT * FROM users WHERE email = ?",
+      "SELECT * FROM users WHERE email = ? and isVerified = 1",
       [email]
     );
-
+    console.dir(users);
     if (users.length === 0) {
       console.log("User does not exist");
       return res.status(404).json({ error: "User does not exist" });
@@ -32,32 +33,41 @@ export const login = async (req: Request, res: Response) => {
 
     const user = users[0];
     const validPassword = await bcrypt.compare(password, user.password);
-
+    console.log("Valid Password:", validPassword);
     if (!validPassword) {
       return res.status(401).json({ error: "Invalid password" });
     }
-
-    if (!validPassword) {
-      return res.status(401).json({ error: "Invalid password" });
-    }
-
+    console.log("User:", user);
     if (!user.isVerified) {
       return res.status(403).json({ error: "Email not verified" });
     }
-
+    console.log("User verified:", user.isVerified);
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
       expiresIn: "24h",
     });
 
+    // Set token in HTTP-only cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
+
     res.json({
-      token,
-      user: { id: user.id, email: user.email, username: user.username },
+      success: true,
+      user: { id: user.id, email: user.email, username: user.username }
     });
   } catch (error) {
     res.status(500).json({ error: "Login failed" });
   }
 };
 
+// Add a logout controller to clear the cookie
+export const logout = async (req: Request, res: Response) => {
+  res.clearCookie('token');
+  res.json({ success: true, message: 'Logged out successfully' });
+};
 export const signup = async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
+import { useRouter } from "next/navigation";
 import api from "#/utils/axios";
 
 export default function LoginPage() {
@@ -12,7 +13,7 @@ export default function LoginPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-
+  const router = useRouter();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const cleanedValue = value.replace(/\s/g, "");
@@ -30,7 +31,13 @@ export default function LoginPage() {
     try {
       const response = await api.post("/auth/login", credentials);
       localStorage.setItem("token", response.data.token);
-      return response.data;
+      if(response.data.success) {
+        router.push("/profile");
+      }
+      else{
+        console.log(response.data.error);
+          setError(response.data.error);
+      }
     } catch (error: any) {
       setError(error.response?.data?.error || "Login failed");
       throw error;

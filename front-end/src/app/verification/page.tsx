@@ -84,7 +84,7 @@ export default function VerificationPage() {
       });
       
       if (response.data.success) {
-        router.push('/profile');
+        router.push('/login');
       }
     } catch (error: any) {
       console.log('Full server response:', error.response);

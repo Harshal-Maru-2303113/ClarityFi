@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiEdit2, FiLogOut, FiUser, FiSave, FiX } from "react-icons/fi";
+import { FiEdit2, FiLogOut, FiSave, FiX } from "react-icons/fi";
 import Image from "next/image";
+import api from "#/utils/axios";
+import axios from "axios";
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -12,12 +14,36 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileData, setProfileData] = useState({
     username: "",
-    email: "john.doe@example.com",
+    email: "",
     age: "",
     gender: "",
-    photoUrl: "/default-avatar.png",
+    photoURL: "/deafual.png",
   });
   const [newPhoto, setNewPhoto] = useState<File | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get("/user/profile");
+        console.dir(response);
+        if (response.data.success) {
+          console.dir(response.data);
+          setProfileData({
+            ...profileData,
+            username: response.data.user.username,
+            email: response.data.user.email,
+            age: response.data.user.age,
+            gender: response.data.user.gender,
+            photoURL: response.data.user.photoURL,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handlePhotoClick = () => {
     if (isEditing) {
@@ -27,14 +53,46 @@ export default function ProfilePage() {
     }
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadToImgBB = async (file: File) => {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const response = await axios.post(
+        "https://api.imgbb.com/1/upload?key=a2c9cdce3e2059963260f180be4a123b", // Replace with your ImgBB API key
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        return response.data.data.url; // Return the public URL of the uploaded image
+      } else {
+        throw new Error("Image upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    }
+  };
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setNewPhoto(file);
-      const imageUrl = URL.createObjectURL(file);
-      setProfileData((prev) => ({ ...prev, photoUrl: imageUrl }));
+      try {
+        const uploadedImageUrl = await uploadToImgBB(file);
+        setProfileData((prev) => ({ ...prev, photoURL: uploadedImageUrl }));
+      } catch (error) {
+        alert("Failed to upload image. Please try again.");
+      }
     }
   };
+
+
 
   // Update the handleInputChange function
   const handleInputChange = (
@@ -58,13 +116,31 @@ export default function ProfilePage() {
     }
   };
 
+  const updateProfile = async (credentials: {
+    username: string;
+    email: string;
+    age: string;
+    gender: string;
+    photoURL:string;
+
+  }) => {
+    try {
+      const response = await api.post("/user/updateProfile",credentials);
+      if(response.data.success){
+        window.alert('Profile Updated Successfully')
+      }
+    } catch (error) {
+      console.dir(error);
+    }
+  };
+
   const handleSave = () => {
     if (ageError) {
       alert("Please fix the age error before saving");
       return;
     }
     setIsEditing(false);
-    // Add your save logic here
+    updateProfile(profileData)
   };
 
   const handleLogout = () => {
@@ -105,7 +181,7 @@ export default function ProfilePage() {
                 onClick={handlePhotoClick}
               >
                 <Image
-                  src={profileData.photoUrl}
+                  src={profileData.photoURL}
                   alt="Profile"
                   width={128}
                   height={128}
@@ -192,7 +268,6 @@ export default function ProfilePage() {
                   <option value="Other">Other</option>
                 </select>
               </div>
-              
             </div>
             {ageError && (
               <p className="text-red-500 text-sm mt-1">{ageError}</p>
@@ -219,7 +294,7 @@ export default function ProfilePage() {
                 <FiX size={24} />
               </button>
               <Image
-                src={profileData.photoUrl}
+                src={profileData.photoURL}
                 alt="Profile"
                 width={600}
                 height={600}

@@ -7,6 +7,13 @@ import { FiMail, FiLock, FiUser, FiEye, FiEyeOff } from "react-icons/fi";
 import api from "#/utils/axios";
 
 export default function SignupPage() {
+  const checkLogin = async () => {
+    const response  = await api.get("/auth/checkLogin");
+    if(response.data.isGuest){
+      router.push("/profile");
+    }
+  }
+  checkLogin();
   const router = useRouter();
   const [formData, setFormData] = useState({
     username: "",

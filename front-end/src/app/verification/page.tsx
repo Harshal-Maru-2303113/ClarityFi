@@ -1,12 +1,16 @@
-'use client'
+"use client";
 
-import { useState, useRef, KeyboardEvent, ClipboardEvent } from 'react'
-import { motion } from 'framer-motion'
-import { FiMail } from 'react-icons/fi'
-import api from '#/utils/axios'
+import { useState, useRef, KeyboardEvent, ClipboardEvent, useEffect } from "react";
+import { motion } from "framer-motion";
+import { FiMail } from "react-icons/fi";
+import api from "#/utils/axios";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function VerificationPage() {
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [email, setEmail] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const inputRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -14,54 +18,93 @@ export default function VerificationPage() {
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
-  ]
+  ];
 
+  useEffect(() => {
+    const emailParam = searchParams.get('email')
+    if (emailParam) {
+      setEmail(decodeURIComponent(emailParam))
+    }
+  }, [searchParams])
 
   const handleChange = (index: number, value: string) => {
-    if (isNaN(Number(value))) return
+    if (isNaN(Number(value))) return;
 
-    const newOtp = [...otp]
-    newOtp[index] = value
-    setOtp(newOtp)
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
 
     // Move to next input if value is entered
-    if (value !== '' && index < 5) {
-      inputRefs[index + 1]?.current?.focus()
+    if (value !== "" && index < 5) {
+      inputRefs[index + 1]?.current?.focus();
     }
-  }
+  };
 
   const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
     // Move to previous input on backspace if current input is empty
-    if (e.key === 'Backspace' && index > 0 && otp[index] === '') {
-      inputRefs[index - 1]?.current?.focus()
+    if (e.key === "Backspace" && index > 0 && otp[index] === "") {
+      inputRefs[index - 1]?.current?.focus();
     }
-  }
+  };
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault()
-    const pastedData = e.clipboardData.getData('text').slice(0, 6)
-    const digits = pastedData.split('').filter(char => !isNaN(Number(char)))
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").slice(0, 6);
+    const digits = pastedData.split("").filter((char) => !isNaN(Number(char)));
 
-    const newOtp = [...otp]
+    const newOtp = [...otp];
     digits.forEach((digit, index) => {
-      if (index < 6) newOtp[index] = digit
-    })
-    setOtp(newOtp)
+      if (index < 6) newOtp[index] = digit;
+    });
+    setOtp(newOtp);
 
     // Focus the next empty input or the last input
-    const nextEmptyIndex = newOtp.findIndex(val => val === '')
+    const nextEmptyIndex = newOtp.findIndex((val) => val === "");
     if (nextEmptyIndex !== -1) {
-      inputRefs[nextEmptyIndex]?.current?.focus()
+      inputRefs[nextEmptyIndex]?.current?.focus();
     } else {
-      inputRefs[5]?.current?.focus()
+      inputRefs[5]?.current?.focus();
     }
-  }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const otpString = otp.join('')
-    // Add your verification logic here
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const otpString = otp.join('');
+    console.log('Submitting verification:', {
+      email,
+      otpString,
+      otpLength: otpString.length,
+      individualDigits: otp
+    });
+
+    try {
+      const response = await api.post('/auth/verification', {
+        email: email.trim(),
+        otp: otpString
+      });
+      
+      if (response.data.success) {
+        router.push('/profile');
+      }
+    } catch (error: any) {
+      console.log('Full server response:', error.response);
+      setOtp(['', '', '', '', '', '']);
+      inputRefs[0]?.current?.focus();
+    }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      const response = await api.post('/auth/resend-otp', { email });
+      // Add success notification
+    } catch (error: any) {
+      console.log('Resend error:', error.response?.data);
+      // Add error notification
+    }
+  };
+
+  // Add visual feedback for verification status
+  const [verificationStatus, setVerificationStatus] = useState<string>('');
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
@@ -114,13 +157,26 @@ export default function VerificationPage() {
           </button>
 
           <div className="text-center text-gray-400">
-            Didn't receive the code?{' '}
-            <button type="button" className="text-blue-500 hover:underline">
+            Didn't receive the code?{" "}
+            <button
+              type="button"
+              onClick={handleResendOTP}
+              className="text-blue-500 hover:underline"
+            >
               Resend
             </button>
           </div>
+
+          {verificationStatus && (
+            <div className="text-center text-red-500 mt-2">
+              {verificationStatus}
+            </div>
+          )}
         </form>
       </motion.div>
     </div>
-  )
+  );
 }
+
+// After successful signup
+

@@ -41,8 +41,9 @@ export default function SignupPage() {
   }) => {
     try {
       const response = await api.post("/auth/signup", credentials);
+      console.dir(response.data);
       if (response.data.success) {
-        router.push("/verification"); // Redirect to verification page
+        router.push(`/verification?email=${encodeURIComponent(credentials.email)}`); // Redirect to verification page
       }
     } catch (error: any) {
       setError(error.response?.data?.error || "Signup failed");

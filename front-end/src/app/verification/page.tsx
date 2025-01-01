@@ -3,6 +3,7 @@
 import { useState, useRef, KeyboardEvent, ClipboardEvent } from 'react'
 import { motion } from 'framer-motion'
 import { FiMail } from 'react-icons/fi'
+import api from '#/utils/axios'
 
 export default function VerificationPage() {
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
@@ -14,6 +15,7 @@ export default function VerificationPage() {
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
   ]
+
 
   const handleChange = (index: number, value: string) => {
     if (isNaN(Number(value))) return

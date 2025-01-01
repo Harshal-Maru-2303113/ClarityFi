@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FiMail, FiLock, FiUser, FiEye, FiEyeOff } from "react-icons/fi";
+import api from "#/utils/axios";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function SignupPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -31,18 +33,29 @@ export default function SignupPage() {
     }));
   };
 
+  const signup = async (credentials: {
+    username: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+  }) => {
+    try {
+      const response = await api.post("/auth/signup", credentials);
+      if (response.data.success) {
+        router.push("/verification"); // Redirect to verification page
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.error || "Signup failed");
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-        alert('Passwords do not match!')
-        return
-      }
-  
-      // Simulate signup success
-      console.log('User signed up:', formData)
-  
-      // Redirect to verification page
-      router.push('/verification')
+      alert("Passwords do not match!");
+      return;
+    }
+    signup(formData);
   };
 
   return (
@@ -59,6 +72,12 @@ export default function SignupPage() {
           <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
             Create Account
           </h1>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-500 rounded-lg p-3 text-center">
+              {error}
+            </div>
+          )}
 
           <div className="space-y-6">
             <div className="relative">

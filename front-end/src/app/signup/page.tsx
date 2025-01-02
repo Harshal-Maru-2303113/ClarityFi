@@ -10,7 +10,7 @@ export default function SignupPage() {
   const checkLogin = async () => {
     const response  = await api.get("/auth/checkLogin");
     if(response.data.isGuest){
-      router.push("/profile");
+      router.push("/dashboard");
     }
   }
   checkLogin();

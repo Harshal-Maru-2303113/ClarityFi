@@ -18,7 +18,7 @@ export default function ProfilePage() {
     email: "",
     age: "",
     gender: "",
-    photoURL: "/default.png",
+    photoURL: "",
   });
   const [newPhoto, setNewPhoto] = useState<File | null>(null);
 
@@ -103,9 +103,11 @@ export default function ProfilePage() {
 
     if (name === "username") {
       const cleanedValue = value.replace(/\s/g, "");
+      console.log(cleanedValue);
       setProfileData((prev) => ({ ...prev, [name]: cleanedValue }));
     } else if (name === "age") {
       setProfileData((prev) => ({ ...prev, age: value }));
+      console.log(value);
       const ageValue = parseInt(value);
       if (value && (ageValue < 16 || ageValue > 150)) {
         setAgeError("Age must be between 16 and 150");
@@ -194,7 +196,7 @@ export default function ProfilePage() {
                     onClick={handlePhotoClick}
                   >
                     <Image
-                      src={profileData.photoURL || "default.png"}
+                      src={profileData.photoURL || "https://www.pngarts.com/files/10/Default-Profile-Picture-Download-PNG-Image.png"}
                       alt="Profile"
                       width={128}
                       height={128}
@@ -236,7 +238,7 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     name="username"
-                    value={profileData.username}
+                    value={profileData.username || ""}
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50"
@@ -247,7 +249,7 @@ export default function ProfilePage() {
                   <label className="text-gray-400 text-sm">Email</label>
                   <input
                     type="email"
-                    value={profileData.email}
+                    value={profileData.email || ""}
                     disabled
                     className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 border border-gray-700 opacity-50 cursor-not-allowed"
                   />
@@ -259,7 +261,7 @@ export default function ProfilePage() {
                     <input
                       type="number"
                       name="age"
-                      value={profileData.age}
+                      value={profileData.age || ""}
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       className={`w-full bg-gray-800 text-white rounded-lg px-4 py-3 border ${
@@ -272,7 +274,7 @@ export default function ProfilePage() {
                     <label className="text-gray-400 text-sm">Gender</label>
                     <select
                       name="gender"
-                      value={profileData.gender}
+                      value={profileData.gender || ""}
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50"
@@ -309,7 +311,7 @@ export default function ProfilePage() {
                     <FiX size={24} />
                   </button>
                   <Image
-                    src={profileData.photoURL}
+                    src={profileData.photoURL || "https://www.pngarts.com/files/10/Default-Profile-Picture-Download-PNG-Image.png"}
                     alt="Profile"
                     width={600}
                     height={600}

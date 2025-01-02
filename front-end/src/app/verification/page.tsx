@@ -96,10 +96,12 @@ export default function VerificationPage() {
   const handleResendOTP = async () => {
     try {
       const response = await api.post('/auth/resend-otp', { email });
-      // Add success notification
+      console.dir(response.data);
+      alert("Otp resent successfully");
     } catch (error: any) {
       console.log('Resend error:', error.response?.data);
       // Add error notification
+      alert("Failed to resend OTP. Please try again.");
     }
   };
 

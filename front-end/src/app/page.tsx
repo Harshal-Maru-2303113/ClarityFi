@@ -37,7 +37,13 @@ export default function HeroPage() {
         const response = await api.get("/user/profile", {
           withCredentials: true,
         });
-        setUser(response.data.user);
+        console.dir(response);
+        if(response.data.success){
+          setUser(response.data.user);
+        }
+        else{
+          setUser(null);
+        }
       } catch (error) {
         setUser(null);
       }

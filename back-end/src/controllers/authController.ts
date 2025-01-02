@@ -47,16 +47,16 @@ export const login = async (req: Request, res: Response) => {
     });
 
     // Set token in HTTP-only cookie
-    res.cookie('token', token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
     res.json({
       success: true,
-      user: { id: user.id, email: user.email, username: user.username }
+      user: { id: user.id, email: user.email, username: user.username },
     });
   } catch (error) {
     res.status(500).json({ error: "Login failed" });
@@ -65,35 +65,33 @@ export const login = async (req: Request, res: Response) => {
 
 // Add a logout controller to clear the cookie
 export const logout = async (req: Request, res: Response) => {
-  res.clearCookie('token');
-  res.json({ success: true, message: 'Logged out successfully' });
+  res.clearCookie("token");
+  res.json({ success: true, message: "Logged out successfully" });
 };
-
-
 
 export const signup = async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
-    
+
     // Log incoming request
-    console.log('Signup request received:', { username, email });
+    console.log("Signup request received:", { username, email });
 
     // Check for existing user
     const [existingUsers]: any = await pool.query(
-      'SELECT * FROM users WHERE email = ?', 
+      "SELECT * FROM users WHERE email = ?",
       [email]
     );
 
     if (existingUsers.length > 0) {
-      return res.status(409).json({ error: 'Email already registered' });
+      return res.status(409).json({ error: "Email already registered" });
     }
 
     const hashedPassword = await hashPassword(password);
-
+    const defaultPhotoURL = "https://www.pngarts.com/files/10/Default-Profile-Picture-Download-PNG-Image.png"
     // Insert new user
     const [result]: any = await pool.query(
-      'INSERT INTO users (username, email, password, isVerified) VALUES (?, ?, ?, ?)',
-      [username, email, hashedPassword, false]
+      "INSERT INTO users (username, email, password, isVerified,photoURL) VALUES (?, ?, ?, ?,?)",
+      [username, email, hashedPassword, false,defaultPhotoURL]
     );
 
     // Send OTP
@@ -101,16 +99,16 @@ export const signup = async (req: Request, res: Response) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Registration successful. Please check your email for verification code.',
-      userId: result.insertId
+      message:
+        "Registration successful. Please check your email for verification code.",
+      userId: result.insertId,
     });
-
   } catch (error: unknown) {
-    console.error('Signup error:', error);
+    console.error("Signup error:", error);
     return res.status(500).json({
       success: false,
-      error: 'Registration failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: "Registration failed",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -120,41 +118,64 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
     const isValid = await verifyOTP(email, otp);
     if (!isValid) {
-      return res.status(400).json({ error: 'Invalid or expired OTP' });
+      return res.status(400).json({ error: "Invalid or expired OTP" });
     }
 
     // Update user verification status
-    await pool.query(
-      'UPDATE users SET isVerified = true WHERE email = ?',
-      [email]
-    );
-    console.log('User verified:', email);
-
-    res.json({ success:true,message: 'Email verified successfully' });
+    await pool.query("UPDATE users SET isVerified = true WHERE email = ?", [
+      email,
+    ]);
+    console.log("User verified:", email);
+    createUserTable(email);
+    res.json({ success: true, message: "Email verified successfully" });
   } catch (error) {
-    res.status(500).json({success:false, error: 'Verification failed' });
+    res.status(500).json({ success: false, error: "Verification failed" });
   }
 };
-
 
 export const resendOTP = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
 
-    const [users]: any = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    const [users]: any = await pool.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
     if (users.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({success:false, error: "User not found" });
     }
 
     const otpSent = await sendOTP(email);
     if (!otpSent) {
-      return res.status(500).json({ error: 'Failed to send verification email' });
+      return res
+        .status(500)
+        .json({success:false, error: "Failed to send verification email" });
     }
 
-    res.json({ message: 'Verification code sent successfully' });
+    res.json({ success:true,message: "Verification code sent successfully" });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to resend verification code' });
+    res.status(500).json({success:false, error: "Failed to resend verification code" });
   }
 };
 
-
+const createUserTable = async (email: string) => {
+  try {
+    const [result]: any = await pool.query(
+      `
+      CREATE TABLE \`${email}\` (
+        transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+        date_time DATETIME NOT NULL,
+        amount DECIMAL(10, 2) NOT NULL,
+        transaction_type ENUM('credit', 'debit') NOT NULL,
+        description VARCHAR(255),
+        subcategory_id INT NOT NULL,
+        balance DECIMAL(10, 2),
+        FOREIGN KEY (subcategory_id) REFERENCES subcategories(subcategory_id) ON DELETE CASCADE)
+        `
+    );
+    console.dir(result);
+    console.log("User table created or already exists");
+  } catch (error) {
+    console.error("Error creating user table:", error);
+  }
+};

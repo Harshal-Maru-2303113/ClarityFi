@@ -63,11 +63,14 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     console.dir(req.body);
     const { username, age, gender, photoURL, email } = req.body;
     
+    console.dir(photoURL)
 
     const [result]: any = await pool.query(
       "UPDATE users SET username =?,age = ?, gender=?,photoURL =? WHERE email = ?",
       [username, age, gender, photoURL, email]
     );
+
+    console.dir(result);
     console.log(result.affectedRows);
     if (result.affectedRows > 0) {
       console.log("profile updated successfully");

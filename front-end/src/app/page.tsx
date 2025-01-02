@@ -6,15 +6,15 @@ import api from "#/utils/axios";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
-  animate: { opacity: 1, y: 0 }
+  animate: { opacity: 1, y: 0 },
 };
 
 const staggerContainer = {
   animate: {
     transition: {
-      staggerChildren: 0.2
-    }
-  }
+      staggerChildren: 0.2,
+    },
+  },
 };
 
 const floatingAnimation = {
@@ -23,9 +23,9 @@ const floatingAnimation = {
     transition: {
       duration: 3,
       repeat: Infinity,
-      ease: "easeInOut"
-    }
-  }
+      ease: "easeInOut",
+    },
+  },
 };
 
 export default function HeroPage() {
@@ -34,7 +34,9 @@ export default function HeroPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await api.get("/user/profile", { withCredentials: true });
+        const response = await api.get("/user/profile", {
+          withCredentials: true,
+        });
         setUser(response.data.user);
       } catch (error) {
         setUser(null);
@@ -52,7 +54,7 @@ export default function HeroPage() {
         className="text-center relative"
       >
         {/* Background gradient circles */}
-        <motion.div 
+        <motion.div
           className="absolute -z-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
@@ -61,10 +63,10 @@ export default function HeroPage() {
           transition={{
             duration: 8,
             repeat: Infinity,
-            ease: "linear"
+            ease: "linear",
           }}
         />
-        <motion.div 
+        <motion.div
           className="absolute -z-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"
           animate={{
             scale: [1.2, 1, 1.2],
@@ -73,40 +75,46 @@ export default function HeroPage() {
           transition={{
             duration: 8,
             repeat: Infinity,
-            ease: "linear"
+            ease: "linear",
           }}
         />
-        <motion.h1 
+        <motion.h1
           variants={fadeInUp}
           className="text-7xl font-bold mb-6 animate-gradient bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 bg-clip-text text-transparent hero-page animate-gradient"
           whileHover={{
             scale: 1.05,
-            transition: { duration: 0.2 }
+            transition: { duration: 0.2 },
           }}
         >
           Welcome to ClarityFi
         </motion.h1>
-        <motion.p 
+        <motion.p
           variants={fadeInUp}
           className="text-gray-400 text-2xl mb-12"
           {...floatingAnimation}
         >
           Your Financial Journey Starts Here
         </motion.p>
-
         {user ? (
           <motion.div
             variants={fadeInUp}
-            className="text-white text-3xl"
-            whileHover={{ scale: 1.05 }}
+            className="flex flex-col items-center space-y-6"
           >
-            Welcome back, <span className="text-blue-500 font-bold">{user.username}</span>!
+            <motion.div className="text-white text-3xl" whileHover={{ scale: 1.05 }}>
+              Welcome back,{" "}
+              <span className="text-blue-500 font-bold">{user.username}</span>!
+            </motion.div>
+            <motion.a
+              href="/dashboard"
+              className="bg-gradient-to-r from-cyan-500 to-teal-600 text-white px-10 py-4 rounded-lg font-semibold inline-block shadow-md hover:shadow-lg hover:shadow-cyan-500/50"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Go to Dashboard
+            </motion.a>
           </motion.div>
         ) : (
-          <motion.div 
-            variants={fadeInUp}
-            className="space-x-6"
-          >
+          <motion.div variants={fadeInUp} className="space-x-6">
             <motion.a
               href="/login"
               className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-10 py-4 rounded-lg font-semibold inline-block"
@@ -128,4 +136,5 @@ export default function HeroPage() {
       </motion.div>
     </div>
   );
+
 }

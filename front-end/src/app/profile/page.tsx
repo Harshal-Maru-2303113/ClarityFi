@@ -144,7 +144,17 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    // Add your logout logic here
+    const logout = async () => {
+      try {
+        const response = await api.post("/auth/logout");
+        if (response.data.success) {
+          window.location.href = "/";
+        }
+      } catch (error) {
+        console.error("Failed to logout:", error);
+      }
+    };
+      logout();
   };
 
   return (

@@ -30,7 +30,6 @@ export default function LoginPage() {
   const login = async (credentials: { email: string; password: string }) => {
     try {
       const response = await api.post("/auth/login", credentials);
-      localStorage.setItem("token", response.data.token);
       if(response.data.success) {
         router.push("/dashboard");
       }

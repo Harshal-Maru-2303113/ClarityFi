@@ -62,8 +62,8 @@ export const updateUserProfile = async (req: Request, res: Response) => {
   try {
     console.dir(req.body);
     const { username, age, gender, photoURL, email } = req.body;
-    
-    console.dir(photoURL)
+
+    console.dir(photoURL);
 
     const [result]: any = await pool.query(
       "UPDATE users SET username =?,age = ?, gender=?,photoURL =? WHERE email = ?",
@@ -94,9 +94,9 @@ export const updateUserProfile = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getUserTransactionData = async (req: Request, res: Response) => {
   try {
+    console.dir(req.cookies);
     const token = req.cookies.token;
     if (!token) {
       return res.status(401).json({
@@ -115,16 +115,33 @@ export const getUserTransactionData = async (req: Request, res: Response) => {
 
     const email = decoded.email;
 
-    const [transaction]:any = await pool.query(
-      "SELECT * FROM transactions WHERE email = ?",
-      [email]
-    );
+    const [transaction]: any = await pool.query(`
+      SELECT 
+        t.transaction_id,
+        t.email,
+        t.date_time,
+        t.amount,
+        t.transaction_type,
+        t.description,
+        t.subcategory_id,
+        t.balance,
+        sc.subcategory_name,
+        sc.category_id,
+        c.category_name
+      FROM 
+        transactions t
+      LEFT JOIN 
+        subcategories sc ON t.subcategory_id = sc.subcategory_id
+      LEFT JOIN 
+        categories c ON sc.category_id = c.category_id
+      WHERE 
+        t.email = ?;
+`,[email]);
     console.dir(transaction);
     res.status(200).json({
       success: true,
       data: transaction,
     });
-
   } catch (error) {
     console.error("Error fetching transaction data:", error);
     res.status(500).json({

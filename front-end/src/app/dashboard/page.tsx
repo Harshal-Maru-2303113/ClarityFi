@@ -8,13 +8,62 @@ import {
   FiCreditCard,
   FiArrowUp,
   FiArrowDown,
+  FiChevronRight,
 } from "react-icons/fi";
 import Navigation from "#/components/Navigation";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { calculateBalance, Transaction } from "#/utils/Calculate";
 import api from "#/utils/axios";
+import { s } from "framer-motion/client";
 
 export default function Dashboard() {
- 
+  const [transactionArray, setTransactionArray] = useState<Transaction[]>([]);
+  const [amount, setAmount] = useState(0);
+  const [income, setIncome] = useState(0);
+  const [expense, setExpense] = useState(0);
+
+  const getTransactionsData = async () => {
+    try {
+      const response: any = await api.post("/user/getTransactionData");
+      if (response.data.success) {
+        const transactions = response.data.data;
+        setTransactionArray(transactions);
+        return;
+      } else {
+        console.error("Error fetching transactions:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
+  useEffect(() => {
+    getTransactionsData();
+  }, []);
+  console.log(transactionArray);
+  useEffect(() => {
+    if (transactionArray.length > 0) {
+      const { currentBalance, totalIncome, totalSpending } =
+        calculateBalance(transactionArray);
+      setAmount(currentBalance);
+      setIncome(totalIncome);
+      setExpense(totalSpending);
+    }
+  }, [transactionArray]);
+  const [popupContent, setPopupContent] = useState<Transaction | null>(null);
+
+  // Function to handle showing the popup
+
+  // Function to truncate description to first two words
+  const truncateDescription = (description: string) => {
+    const words = description.split(" ");
+    if (words.length > 2) {
+      return words.slice(0, 2).join(" ") + " ...";
+    }
+    return description;
+  };
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="flex">
       <Navigation />
@@ -32,10 +81,9 @@ export default function Dashboard() {
                   Financial Overview
                 </h1>
                 <Link href={"/addtransactions"}>
-                <button 
-                 className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg px-4 py-2 font-semibold hover:opacity-90 transition">
-                  + New Transaction
-                </button>
+                  <button className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg px-4 py-2 font-semibold hover:opacity-90 transition">
+                    + New Transaction
+                  </button>
                 </Link>
               </div>
 
@@ -44,17 +92,17 @@ export default function Dashboard() {
                 {[
                   {
                     title: "Total Balance",
-                    amount: "$24,500",
+                    amount: amount,
                     icon: <FiDollarSign size={24} />,
                   },
                   {
                     title: "Monthly Income",
-                    amount: "$8,340",
+                    amount: income,
                     icon: <FiTrendingUp size={24} />,
                   },
                   {
                     title: "Total Expenses",
-                    amount: "$3,800",
+                    amount: expense,
                     icon: <FiCreditCard size={24} />,
                   },
                 ].map((stat, index) => (
@@ -70,7 +118,7 @@ export default function Dashboard() {
                         {stat.icon}
                       </div>
                       <div>
-                        <p className="text-gray-400 text-sm md:text-base">
+                        <p className="text-gray-400 text-sm md:text-xl">
                           {stat.title}
                         </p>
                         <p className="text-xl md:text-2xl font-bold text-white">
@@ -86,7 +134,7 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6">
                 {/* Chart Section */}
                 <div className="xl:col-span-2 bg-gray-800 p-4 md:p-6 rounded-xl border border-gray-700">
-                  <h2 className="text-lg md:text-xl font-semibold text-white mb-4">
+                  <h2 className="text-xl md:text-xl font-semibold text-white mb-4">
                     Spending Analytics
                   </h2>
                   <div className="h-48 md:h-64 bg-gray-700/50 rounded-lg flex items-center justify-center">
@@ -96,57 +144,176 @@ export default function Dashboard() {
 
                 {/* Recent Transactions */}
                 <div className="bg-gray-800 p-4 md:p-6 rounded-xl border border-gray-700">
-                  <h2 className="text-lg md:text-xl font-semibold text-white mb-4">
+                  <h2 className="text-xl md:text-xl font-semibold text-white mb-4">
                     Recent Transactions
                   </h2>
                   <div className="space-y-3">
-                    {[
-                      {
-                        name: "Grocery Shopping",
-                        amount: "-$150",
-                        type: "expense",
-                      },
-                      {
-                        name: "Salary Deposit",
-                        amount: "+$3,000",
-                        type: "income",
-                      },
-                      { name: "Netflix", amount: "-$15", type: "expense" },
-                    ].map((transaction, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-700/50 rounded-lg transition-all"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`p-2 rounded-lg ${
-                              transaction.type === "income"
-                                ? "bg-green-500/10"
-                                : "bg-red-500/10"
+                    {transactionArray
+                      .slice(-4) // Get the last 4 transactions
+                      .reverse() // Reverse the order to show the latest first
+                      .map((transaction, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-700/50 rounded-lg transition-all cursor-pointer"
+                          onClick={() => setPopupContent(transaction)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`p-2 rounded-lg ${
+                                transaction.transaction_type === "credit"
+                                  ? "bg-green-500/10"
+                                  : "bg-red-500/10"
+                              }`}
+                            >
+                              {transaction.transaction_type === "credit" ? (
+                                <FiArrowUp className="text-green-500" />
+                              ) : (
+                                <FiArrowDown className="text-red-500" />
+                              )}
+                            </div>
+                            <span className="text-white text-sm md:text-xl">
+                              {truncateDescription(transaction.description)}
+                            </span>
+                          </div>
+
+                          <span
+                            className={`font-semibold text-sm md:text-xl ${
+                              transaction.transaction_type === "credit"
+                                ? "text-green-500"
+                                : "text-red-500"
                             }`}
                           >
-                            {transaction.type === "income" ? (
-                              <FiArrowUp className="text-green-500" />
-                            ) : (
-                              <FiArrowDown className="text-red-500" />
-                            )}
-                          </div>
-                          <span className="text-white text-sm md:text-base">
-                            {transaction.name}
+                            {transaction.transaction_type === "credit"
+                              ? "+"
+                              : "-"}
+                            ${Number(transaction.amount).toFixed(2)}
                           </span>
                         </div>
-                        <span
-                          className={`font-semibold text-sm md:text-base ${
-                            transaction.type === "income"
-                              ? "text-green-500"
-                              : "text-red-500"
-                          }`}
-                        >
-                          {transaction.amount}
-                        </span>
-                      </div>
-                    ))}
+                      ))}
                   </div>
+
+                  {/* Popup Modal */}
+                  {popupContent && (
+                    <div
+                      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+                      onClick={() => setPopupContent(null)} // Close when clicking on the overlay
+                    >
+                      <div
+                        className="bg-gray-800 p-6 rounded-xl border border-gray-700 max-w-md w-full mx-4"
+                        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+                      >
+                        <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent p-3 text-center">
+                          Transaction Details
+                        </h3>
+                        <div className="space-y-4 text-white text-sm md:text-xl">
+                          <p className="flex items-center gap-4">
+                            <span className="font-semibold text-xl text-blue-400">
+                              Transaction ID:
+                            </span>
+                            <span className="block text-xl text-gray-200">
+                              {popupContent.transaction_id}
+                            </span>
+                          </p>
+                          <p className="flex items-center gap-4">
+                            <span className="font-semibold text-xl text-blue-400">
+                              Date:
+                            </span>
+                            <span className="block text-xl text-gray-200">
+                              {new Date(
+                                popupContent.date_time
+                              ).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </span>
+                          </p>
+                          <p className="flex items-center gap-4">
+                            <span className="font-semibold text-xl text-blue-400">
+                              Time:
+                            </span>
+                            <span className="block text-xl text-gray-200">
+                              {new Date(
+                                popupContent.date_time
+                              ).toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              })}
+                            </span>
+                          </p>
+                          <p className="flex items-center gap-4">
+                            <span className="font-semibold text-xl text-blue-400">
+                              Type:
+                            </span>
+                            <span
+                              className={`block text-xl ${
+                                popupContent.transaction_type === "credit"
+                                  ? "text-green-400"
+                                  : "text-red-400"
+                              }`}
+                            >
+                              {popupContent.transaction_type
+                                .charAt(0)
+                                .toUpperCase() +
+                                popupContent.transaction_type.slice(1)}
+                            </span>
+                          </p>
+                          <p className="flex items-center gap-4">
+                            <span className="font-semibold text-xl text-blue-400">
+                              Amount:
+                            </span>
+                            <span className={`block text-xl ${
+                                popupContent.transaction_type === "credit"
+                                  ? "text-green-400"
+                                  : "text-red-400"
+                              }`}>
+                              ${Number(popupContent.amount).toFixed(2)}
+                            </span>
+                          </p>
+                          <p >
+                            <span className="font-semibold text-xl text-blue-400">
+                              Description:
+                            </span>
+                            <span className="block text-xl text-gray-200 ml-3">
+                              {popupContent.description}
+                            </span>
+                          </p>
+                          <p className="flex items-center gap-4">
+                            <span className="font-semibold text-xl text-blue-400">
+                              Category:
+                            </span>
+                            <span className="block text-xl text-gray-200">
+                              {popupContent.category_name}
+                            </span>
+                          </p>
+                          <p className="flex items-center gap-4">
+                            <span className="font-semibold text-xl text-blue-400">
+                              Subcategory:
+                            </span>
+                            <span className="block text-xl text-gray-200">
+                              {popupContent.subcategory_name || "N/A"}
+                            </span>
+                          </p>
+                          
+                          <p className="flex items-center gap-4">
+                            <span className="font-semibold text-xl text-blue-400">
+                              Balance:
+                            </span>
+                            <span className="block text-xl text-gray-200">
+                              ${Number(popupContent.balance).toFixed(2)}
+                            </span>
+                          </p>
+                        </div>
+                        <button
+                          className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition"
+                          onClick={() => setPopupContent(null)}
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -155,5 +322,4 @@ export default function Dashboard() {
       </div>
     </div>
   );
-
 }

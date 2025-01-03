@@ -9,6 +9,7 @@ import {
   FiFilter,
 } from "react-icons/fi";
 import Navigation from "#/components/Navigation";
+import Link from "next/link";
 
 export default function TransactionsPage() {
   const transactions = [
@@ -66,9 +67,11 @@ export default function TransactionsPage() {
                     <FiFilter className="inline mr-2" />
                     Filter
                   </button>
+                  <Link href={"/addtransactions"}>
                   <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition">
                     + New Transaction
                   </button>
+                  </Link>
                 </div>
               </div>
 

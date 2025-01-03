@@ -1,6 +1,6 @@
 
 import express,{Request,Response} from "express";
-import { getUserProfile, updateUserProfile } from "../controllers/userController";
+import { getUserProfile, getUserTransactionData, updateUserProfile } from "../controllers/userController";
 
 const router = express.Router();
 
@@ -34,4 +34,20 @@ router.get(
       }
     }
   );
+
+  router.post(
+    "/getTransactionData",
+    async (req:Request, res: Response) => {
+      try {
+        await getUserTransactionData(req, res);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          res.status(500).json({ error: error.message });
+        } else {
+          res.status(500).json({ error: "An unknown error occurred" });
+        }
+      }
+    }
+  );
+
 export default router;

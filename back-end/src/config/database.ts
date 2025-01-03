@@ -9,8 +9,6 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME || 'clarityfi',
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
 });
 
 

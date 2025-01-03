@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
 
   // Define protected and public routes
   const authPages = ['/login', '/signup', '/verification']
-  const protectedPages = ['/profile', '/dashboard','/budget','/transactions','/settings','/investments']
+  const protectedPages = ['/profile', '/dashboard','/budget','/transactions','/settings','/investments','addtransactions']
   const isAuthPage = authPages.includes(pathname)
   const isProtectedPage = protectedPages.includes(pathname)
 

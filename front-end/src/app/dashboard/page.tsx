@@ -10,8 +10,11 @@ import {
   FiArrowDown,
 } from "react-icons/fi";
 import Navigation from "#/components/Navigation";
+import Link from "next/link";
+import api from "#/utils/axios";
 
 export default function Dashboard() {
+ 
   return (
     <div className="flex">
       <Navigation />
@@ -28,9 +31,12 @@ export default function Dashboard() {
                 <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
                   Financial Overview
                 </h1>
-                <button className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg px-4 py-2 font-semibold hover:opacity-90 transition">
+                <Link href={"/addtransactions"}>
+                <button 
+                 className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg px-4 py-2 font-semibold hover:opacity-90 transition">
                   + New Transaction
                 </button>
+                </Link>
               </div>
 
               {/* Quick Stats */}
@@ -149,4 +155,5 @@ export default function Dashboard() {
       </div>
     </div>
   );
+
 }

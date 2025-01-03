@@ -42,7 +42,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(403).json({ error: "Email not verified" });
     }
     console.log("User verified:", user.isVerified);
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+    const token = jwt.sign({ userId: user.id,email:email }, process.env.JWT_SECRET!, {
       expiresIn: "24h",
     });
 
@@ -126,7 +126,6 @@ export const verifyEmail = async (req: Request, res: Response) => {
       email,
     ]);
     console.log("User verified:", email);
-    createUserTable(email);
     res.json({ success: true, message: "Email verified successfully" });
   } catch (error) {
     res.status(500).json({ success: false, error: "Verification failed" });
@@ -158,24 +157,3 @@ export const resendOTP = async (req: Request, res: Response) => {
   }
 };
 
-const createUserTable = async (email: string) => {
-  try {
-    const [result]: any = await pool.query(
-      `
-      CREATE TABLE \`${email}\` (
-        transaction_id INT AUTO_INCREMENT PRIMARY KEY,
-        date_time DATETIME NOT NULL,
-        amount DECIMAL(10, 2) NOT NULL,
-        transaction_type ENUM('credit', 'debit') NOT NULL,
-        description VARCHAR(255),
-        subcategory_id INT NOT NULL,
-        balance DECIMAL(10, 2),
-        FOREIGN KEY (subcategory_id) REFERENCES subcategories(subcategory_id) ON DELETE CASCADE)
-        `
-    );
-    console.dir(result);
-    console.log("User table created or already exists");
-  } catch (error) {
-    console.error("Error creating user table:", error);
-  }
-};

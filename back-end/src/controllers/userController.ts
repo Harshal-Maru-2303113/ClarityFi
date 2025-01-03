@@ -93,3 +93,43 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+export const getUserTransactionData = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication token missing",
+      });
+    }
+
+    const decoded = jwt.decode(token);
+    if (!decoded || typeof decoded !== "object" || !decoded.email) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+
+    const email = decoded.email;
+
+    const [transaction]:any = await pool.query(
+      "SELECT * FROM transactions WHERE email = ?",
+      [email]
+    );
+    console.dir(transaction);
+    res.status(200).json({
+      success: true,
+      data: transaction,
+    });
+
+  } catch (error) {
+    console.error("Error fetching transaction data:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching user transaction data",
+    });
+  }
+};

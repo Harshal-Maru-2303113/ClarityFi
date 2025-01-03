@@ -2,34 +2,66 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import Navigation from "#/components/Navigation";
-import { categories,subcategories } from "#/utils/categories";
-  
+import { categories, subcategories } from "#/utils/categories";
+import api from "#/utils/axios";
+import { useRouter } from "next/navigation";
 
 export default function TransactionPage() {
+
+  const router = useRouter();
+
   const [amount, setAmount] = useState("");
   const [transactionType, setTransactionType] = useState("credit");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [subcategoryId, setSubcategoryId] = useState("");
 
+  const data = {
+    amount,
+    transactionType,
+    description,
+    categoryId,
+    subcategoryId,
+  };
+
+  const sentTransactionData = async () => {
+    try {
+      const data = {
+        amount,
+        transactionType,
+        description,
+        categoryId,
+        subcategoryId,
+      };
+      const response: any = await api.post("/user/addTransactionData", data);
+      if (response.data.success) {
+        alert("Transaction added successfully!");
+        router.push("/dashboard");
+      } else {
+        alert(response.data.message);
+        setAmount("");
+        setTransactionType("credit");
+        setDescription("");
+        setCategoryId("");
+        setSubcategoryId("");
+        return;
+      }
+    } catch (error) {
+      alert("Error adding transaction");
+      console.error("Error adding transaction:", error);
+      setAmount("");
+
+      setTransactionType("credit");
+      setDescription("");
+      setCategoryId("");
+      setSubcategoryId("");
+      return;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate form submission logic
-    console.log({
-      amount,
-      transactionType,
-      description,
-      categoryId,
-      subcategoryId,
-    });
-    alert("Transaction added successfully!");
-    // Reset form
-    setAmount("");
-    setTransactionType("credit");
-    setDescription("");
-    setCategoryId("");
-    setSubcategoryId("");
+   sentTransactionData();
   };
 
   const filteredSubcategories = subcategories.filter(
@@ -63,7 +95,9 @@ export default function TransactionPage() {
             </div>
 
             <div>
-              <label className="block text-gray-300 mb-2">Transaction Type</label>
+              <label className="block text-gray-300 mb-2">
+                Transaction Type
+              </label>
               <select
                 value={transactionType}
                 onChange={(e) => setTransactionType(e.target.value)}

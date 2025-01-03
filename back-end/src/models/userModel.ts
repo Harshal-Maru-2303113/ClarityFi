@@ -23,14 +23,18 @@ interface Subcategory {
 }
 
 interface Transaction {
-  transaction_id?: number; // Primary key, optional for creation
-  date_time: Date; // Date and time of the transaction
-  amount: number; // Transaction amount
-  transaction_type: 'credit' | 'debit'; // Transaction type
-  description?: string; // Optional description
-  subcategory_id: number; // Foreign key referencing `subcategory_id`
-  balance?: number; // Optional balance after the transaction
+  transaction_id: number;
+  email: string;
+  date_time: string;
+  amount: string;
+  transaction_type: string;
+  description: string;
+  subcategory_id: number;
+  balance: string;
+  subcategory_name: string;
+  category_id: number;
+  category_name: string;
 }
 
 
-export { User, OTPRecord };
+export { User, OTPRecord,Transaction };

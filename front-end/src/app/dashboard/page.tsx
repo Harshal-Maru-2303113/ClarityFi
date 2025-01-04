@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { calculateBalance, Transaction } from "#/utils/Calculate";
 import api from "#/utils/axios";
-import { s } from "framer-motion/client";
+
 
 export default function Dashboard() {
   const [transactionArray, setTransactionArray] = useState<Transaction[]>([]);
@@ -23,22 +23,29 @@ export default function Dashboard() {
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
 
-  const getTransactionsData = async () => {
+  const getTransactionsData = async (start: number, limit: number) => {
     try {
-      const response: any = await api.post("/user/getTransactionData");
+      const response: any = await api.post("/user/getTransactionData", {
+        start,
+        limit,
+      });
       if (response.data.success) {
-        const transactions = response.data.data;
-        setTransactionArray(transactions);
-        return;
+        return response.data.data;
       } else {
         console.error("Error fetching transactions:", response.data.message);
+        return [];
       }
     } catch (error) {
       console.error("Error fetching transactions:", error);
+      return [];
     }
   };
   useEffect(() => {
-    getTransactionsData();
+    const fecthDta = async ()=>{
+      const initialData = await getTransactionsData(0, 4);
+      setTransactionArray(initialData);
+    }
+    fecthDta();
   }, []);
   console.log(transactionArray);
   useEffect(() => {
@@ -149,8 +156,6 @@ export default function Dashboard() {
                   </h2>
                   <div className="space-y-3">
                     {transactionArray
-                      .slice(-4) // Get the last 4 transactions
-                      .reverse() // Reverse the order to show the latest first
                       .map((transaction, index) => (
                         <div
                           key={index}

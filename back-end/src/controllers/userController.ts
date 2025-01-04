@@ -97,7 +97,8 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 
 export const getUserTransactionData = async (req: Request, res: Response) => {
   try {
-    console.dir(req.cookies);
+    const { start, limit } = req.body;
+
     const token = req.cookies.token;
     if (!token) {
       return res.status(401).json({
@@ -137,11 +138,14 @@ export const getUserTransactionData = async (req: Request, res: Response) => {
       LEFT JOIN 
         categories c ON sc.category_id = c.category_id
       WHERE 
-        t.email = ?;
-`,
-      [email]
+        t.email = ?
+      ORDER BY 
+        t.date_time DESC
+      LIMIT ? OFFSET ?;
+      `,
+      [email, Number(limit), Number(start)]
     );
-    console.dir(transaction);
+
     res.status(200).json({
       success: true,
       data: transaction,

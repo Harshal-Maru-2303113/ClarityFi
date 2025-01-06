@@ -41,11 +41,11 @@ export default function Dashboard() {
     }
   };
   useEffect(() => {
-    const fecthDta = async ()=>{
+    const fetchDta = async ()=>{
       const initialData = await getTransactionsData(0, 4);
       setTransactionArray(initialData);
     }
-    fecthDta();
+    fetchDta();
   }, []);
   console.log(transactionArray);
   useEffect(() => {

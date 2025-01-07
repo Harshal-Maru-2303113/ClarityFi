@@ -119,29 +119,26 @@ export const getUserTransactionData = async (req: Request, res: Response) => {
 
     const [transaction]: any = await pool.query(
       `
-      SELECT 
-        t.transaction_id,
-        t.email,
-        t.date_time,
-        t.amount,
-        t.transaction_type,
-        t.description,
-        t.subcategory_id,
-        t.balance,
-        sc.subcategory_name,
-        sc.category_id,
-        c.category_name
-      FROM 
-        transactions t
-      LEFT JOIN 
-        subcategories sc ON t.subcategory_id = sc.subcategory_id
-      LEFT JOIN 
-        categories c ON sc.category_id = c.category_id
-      WHERE 
-        t.email = ?
-      ORDER BY 
-        t.date_time DESC
-      LIMIT ? OFFSET ?;
+SELECT 
+  t.transaction_id,
+  t.email,
+  t.date_time,
+  t.amount,
+  t.transaction_type,
+  t.description,
+  t.category_id,
+  t.balance,
+  c.category_name
+FROM 
+  transactions t
+LEFT JOIN 
+  categories c ON t.category_id = c.category_id
+WHERE 
+  t.email = ?
+ORDER BY 
+  t.date_time DESC
+LIMIT ? OFFSET ?;
+
       `,
       [email, Number(limit), Number(start)]
     );
@@ -161,8 +158,7 @@ export const getUserTransactionData = async (req: Request, res: Response) => {
 
 export const addUserTransactionData = async (req: Request, res: Response) => {
   try {
-    const { amount, transactionType, description, categoryId, subcategoryId } =
-      req.body;
+    const { amount, transactionType, description, categoryId } = req.body;
     const numAmount = Number(amount);
     const token = req.cookies.token;
     if (!token) {
@@ -181,21 +177,24 @@ export const addUserTransactionData = async (req: Request, res: Response) => {
     const email = decoded.email;
     console.log(email);
     const latest_balance = await getLatestBalance(email);
-    let balance = latest_balance?.balance ? parseFloat(latest_balance.balance) : 0;
+    let balance = latest_balance?.balance
+      ? parseFloat(latest_balance.balance)
+      : 0;
     console.dir(latest_balance);
-    let final_Sum:Number = 0;
-      if (transactionType == "credit") {
-        final_Sum = Number(balance) + numAmount;
-      } else {
-        final_Sum = Number(balance) - numAmount;
-      }
+    let final_Sum: Number = 0;
+    if (transactionType == "credit") {
+      final_Sum = Number(balance) + numAmount;
+    } else {
+      final_Sum = Number(balance) - numAmount;
+    }
 
     console.dir(final_Sum);
-
-        const [result]: any = await pool.query(
-          `
-    INSERT INTO transactions (email, date_time, amount, transaction_type, description, subcategory_id, balance)
+    const transactionId = await generateTransactionId();
+    const [result]: any = await pool.query(
+      `
+    INSERT INTO transactions (transaction_id,email, date_time, amount, transaction_type, description, category_id, balance)
     VALUES (
+    ?,
       ?,
       NOW(),
       ?,
@@ -206,23 +205,32 @@ export const addUserTransactionData = async (req: Request, res: Response) => {
     );
 
         `,
-          [email, amount, transactionType, description, subcategoryId,String(final_Sum)]
-        );
+      [
+        transactionId,
+        email,
+        amount,
+        transactionType,
+        description,
+        categoryId,
+        String(final_Sum),
+      ]
+    );
 
-        console.dir(result);``
-        if (result.affectedRows > 0) {
-          console.log("Transaction added successfully!");
-          res.status(200).json({
-            success: true,
-            message: "Transaction added successfully!",
-          });
-        } else {
-          console.log("Transaction added unsuccessfully!");
-          res.status(400).json({
-            success: false,
-            message: "Transaction added unsuccessfully!",
-          });
-        }
+    console.dir(result);
+    ``;
+    if (result.affectedRows > 0) {
+      console.log("Transaction added successfully!");
+      res.status(200).json({
+        success: true,
+        message: "Transaction added successfully!",
+      });
+    } else {
+      console.log("Transaction added unsuccessfully!");
+      res.status(400).json({
+        success: false,
+        message: "Transaction added unsuccessfully!",
+      });
+    }
   } catch (error) {
     console.error("Error adding transaction:", error);
     res.status(500).json({
@@ -249,4 +257,28 @@ ORDER BY date_time DESC;`,
     console.error("Error fetching latest balance:", error);
     throw error;
   }
+};
+
+const generateTransactionId = async () => {
+  let transactionId: string = "";
+  let isUnique = false;
+
+  // Keep generating until a unique ID is found
+  while (!isUnique) {
+    // Generate a random 8-digit number
+    transactionId = Math.floor(10000000 + Math.random() * 90000000).toString();
+
+    // Check if the generated ID already exists in the transactions table
+    const [rows]: any = await pool.query(
+      "SELECT transaction_id FROM transactions WHERE transaction_id = ?",
+      [transactionId]
+    );
+
+    // If the ID doesn't exist, it's unique
+    if (rows.length === 0) {
+      isUnique = true;
+    }
+  }
+
+  return transactionId;
 };

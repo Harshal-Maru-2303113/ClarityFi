@@ -7,19 +7,35 @@ import {
   FiArrowDown,
   FiCalendar,
   FiFilter,
+  FiCrosshair,
 } from "react-icons/fi";
 import Navigation from "#/components/Navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import api from "#/utils/axios";
-import { calculateBalance, Transaction } from "#/utils/Calculate";
+import { Transaction } from "#/utils/Calculate";
+import { categories } from "#/utils/categories";
+import { FaTimes } from "react-icons/fa";
 
 export default function TransactionsPage() {
   const [transactionArray, setTransactionArray] = useState<Transaction[]>([]);
   const [popupContent, setPopupContent] = useState<Transaction | null>(null);
   const [hasMoreData, setHasMoreData] = useState(true);
   const [filterOverlay, setFilterOverlay] = useState(false);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    date: string;
+    dateType: string;
+    startDate: string;
+    endDate: string;
+    rangeOption: string;
+    amount: string;
+    amountType: string;
+    amountRange: string;
+    minAmount: string;
+    maxAmount: string;
+    category: string; // Explicitly set to string
+    type: string;
+  }>({
     date: "",
     dateType: "",
     startDate: "",
@@ -30,9 +46,35 @@ export default function TransactionsPage() {
     amountRange: "",
     minAmount: "",
     maxAmount: "",
-    category: "",
+    category: "", // Initialize as an empty string
     type: "",
   });
+
+  const handleCategoryChange = (value: string) => {
+    const currentCategories = filters.category
+      ? filters.category.split(",")
+      : [];
+    if (!currentCategories.includes(value)) {
+      // Add the new category
+      setFilters({
+        ...filters,
+        category: [...currentCategories, value].join(","),
+      });
+    }
+  };
+
+  const removeCategory = (value: string) => {
+    const currentCategories = filters.category.split(",");
+    const updatedCategories = currentCategories.filter(
+      (item) => item !== value
+    );
+    setFilters({
+      ...filters,
+      category: updatedCategories.join(","),
+    });
+  };
+
+ 
 
   const getTransactionsData = async (start: number, limit: number) => {
     try {
@@ -103,13 +145,13 @@ export default function TransactionsPage() {
         (!filters.maxAmount ||
           Number(transaction.amount) <= Number(filters.maxAmount));
 
-      const matchesCategory =
-        !filters.category || transaction.category_name === filters.category;
+      // const matchesCategory =
+      //   !filters.category || transaction.category_name === filters.category;
 
       const matchesType =
         !filters.type || transaction.transaction_type === filters.type;
 
-      return matchesDate && matchesAmount && matchesCategory && matchesType;
+      // return matchesDate && matchesAmount && matchesCategory && matchesType;
     });
 
     setTransactionArray(filteredArray);
@@ -325,15 +367,6 @@ export default function TransactionsPage() {
                       </p>
                       <p className="flex items-center gap-4">
                         <span className="font-semibold text-xl text-blue-400">
-                          Subcategory:
-                        </span>
-                        <span className="block text-xl text-gray-200">
-                          {popupContent.subcategory_name || "N/A"}
-                        </span>
-                      </p>
-
-                      <p className="flex items-center gap-4">
-                        <span className="font-semibold text-xl text-blue-400">
                           Balance:
                         </span>
                         <span className="block text-xl text-gray-200">
@@ -492,15 +525,46 @@ export default function TransactionsPage() {
                     )}
 
                     {/* Category and Type */}
-                    <input
-                      type="text"
-                      className="w-full p-2 bg-gray-700 text-white rounded-lg"
-                      value={filters.category}
-                      onChange={(e) =>
-                        setFilters({ ...filters, category: e.target.value })
+                    <select
+                      className="w-full p-2 bg-gray-700 text-white rounded-lg appearance-none transition-all duration-300 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value="" // Prevent default selection
+                      onChange={(e: any) =>
+                        handleCategoryChange(e.target.value)
                       }
-                      placeholder="Category"
-                    />
+                    >
+                      <option value="">Select Categories</option>
+                      {categories.map((category) => (
+                        <option
+                          key={category.category_id}
+                          value={category.name}
+                          disabled={filters.category
+                            .split(",")
+                            .includes(category.name)}
+                        >
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Display selected categories as tags */}
+                    {filters.category && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {filters.category.split(",").map((selectedCategory) => (
+                          <span
+                            key={selectedCategory}
+                            className="bg-blue-600 text-white px-3  rounded-full flex justify-center items-center shadow-md transition-transform transform hover:scale-105"
+                          >
+                            {selectedCategory}
+                            <button
+                              className="ml-2 text-xs text-white bg-red-500 rounded-full h-1/2 p-1 transition-colors duration-300 hover:bg-red-700"
+                              onClick={() => removeCategory(selectedCategory)}
+                            >
+                              <FaTimes className="mb-[1.375rem] text-xs" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <select
                       className="w-full p-2 bg-gray-700 text-white rounded-lg"
                       value={filters.type}

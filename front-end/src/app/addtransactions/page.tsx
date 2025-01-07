@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { categories, subcategories } from "#/utils/categories";
+import { categories } from "#/utils/categories";
 import api from "#/utils/axios";
 import { useRouter } from "next/navigation";
 
@@ -64,9 +64,6 @@ export default function TransactionPage() {
    sentTransactionData();
   };
 
-  const filteredSubcategories = subcategories.filter(
-    (sub) => sub.category_id.toString() === categoryId
-  );
 
   return (
     <div className="min-h-screen bg-black p-4 md:p-6 lg:p-8">
@@ -136,22 +133,6 @@ export default function TransactionPage() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-gray-300 mb-2">Subcategory</label>
-              <select
-                value={subcategoryId}
-                onChange={(e) => setSubcategoryId(e.target.value)}
-                required
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
-              >
-                <option value="">Select a subcategory</option>
-                {filteredSubcategories.map((sub) => (
-                  <option key={sub.subcategory_id} value={sub.subcategory_id}>
-                    {sub.name}
-                  </option>
-                ))}
-              </select>
-            </div>
 
             <button
               type="submit"

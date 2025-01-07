@@ -292,14 +292,6 @@ export default function Dashboard() {
                               {popupContent.category_name}
                             </span>
                           </p>
-                          <p className="flex items-center gap-4">
-                            <span className="font-semibold text-xl text-blue-400">
-                              Subcategory:
-                            </span>
-                            <span className="block text-xl text-gray-200">
-                              {popupContent.subcategory_name || "N/A"}
-                            </span>
-                          </p>
                           
                           <p className="flex items-center gap-4">
                             <span className="font-semibold text-xl text-blue-400">

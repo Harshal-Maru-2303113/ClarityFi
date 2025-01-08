@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useRef, KeyboardEvent, ClipboardEvent, useEffect } from "react";
+import { useState, useRef, KeyboardEvent, ClipboardEvent, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import { FiMail } from "react-icons/fi";
 import api from "#/utils/axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 
-export default function VerificationPage() {
+function VerificationPageContent() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [email, setEmail] = useState("");
   const router = useRouter();
@@ -191,5 +191,10 @@ export default function VerificationPage() {
   );
 }
 
-// After successful signup
-
+export default function VerificationPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerificationPageContent />
+    </Suspense>
+  );
+}

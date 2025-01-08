@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FiMail, FiLock, FiUser, FiEye, FiEyeOff } from "react-icons/fi";
 import api from "#/utils/axios";
+import axios from "axios";
 
 export default function SignupPage() {
   const checkLogin = async () => {
@@ -52,8 +53,16 @@ export default function SignupPage() {
       if (response.data.success) {
         router.push(`/verification?email=${encodeURIComponent(credentials.email)}`); // Redirect to verification page
       }
-    } catch (error: any) {
-      setError(error.response?.data?.error || "Signup failed");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.data?.error) {
+        if (axios.isAxiosError(error) && error.response?.data?.error) {
+          setError(error.response.data.error);
+        } else {
+          setError("Signup failed");
+        }
+      } else {
+        setError("Signup failed");
+      }
     }
   };
 

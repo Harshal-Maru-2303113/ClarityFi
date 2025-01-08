@@ -20,7 +20,6 @@ export default function ProfilePage() {
     gender: "",
     photoURL: "",
   });
-  const [newPhoto, setNewPhoto] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -29,14 +28,14 @@ export default function ProfilePage() {
         console.dir(response);
         if (response.data.success) {
           console.dir(response.data);
-          setProfileData({
-            ...profileData,
+          setProfileData((prev) => ({
+            ...prev,
             username: response.data.user.username,
             email: response.data.user.email,
             age: response.data.user.age,
             gender: response.data.user.gender,
             photoURL: response.data.user.photoURL,
-          });
+          }));
         }
       } catch (error) {
         console.error("Failed to fetch profile:", error);
@@ -85,12 +84,12 @@ export default function ProfilePage() {
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setNewPhoto(file);
+      // setNewPhoto(file); // This line is commented out because setNewPhoto is not defined
       try {
         const uploadedImageUrl = await uploadToImgBB(file);
         setProfileData((prev) => ({ ...prev, photoURL: uploadedImageUrl }));
       } catch (error) {
-        alert("Failed to upload image. Please try again.");
+        console.error("Error uploading image:", error);
       }
     }
   };

@@ -14,7 +14,6 @@ import Navigation from "#/components/Navigation";
 
 export default function SettingsPage() {
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
 
   return (
     <div className="flex">

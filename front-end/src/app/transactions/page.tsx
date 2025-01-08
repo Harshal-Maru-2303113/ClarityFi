@@ -2,12 +2,8 @@
 
 import { motion } from "framer-motion";
 import {
-  FiDollarSign,
-  FiArrowUp,
-  FiArrowDown,
   FiCalendar,
   FiFilter,
-  FiCrosshair,
 } from "react-icons/fi";
 import Navigation from "#/components/Navigation";
 import Link from "next/link";
@@ -33,7 +29,7 @@ export default function TransactionsPage() {
     amountRange: string;
     minAmount: string;
     maxAmount: string;
-    category: string; // Explicitly set to string
+    category: string[]; // Explicitly set to string
     type: string;
   }>({
     date: "",
@@ -46,31 +42,33 @@ export default function TransactionsPage() {
     amountRange: "",
     minAmount: "",
     maxAmount: "",
-    category: "", // Initialize as an empty string
+    category: [], // Initialize as an empty string
     type: "",
   });
 
   const handleCategoryChange = (value: string) => {
-    const currentCategories = filters.category
-      ? filters.category.split(",")
-      : [];
+    const currentCategories = filters.category;
     if (!currentCategories.includes(value)) {
       // Add the new category
+      const updatedCategories = [...currentCategories, value];
       setFilters({
         ...filters,
-        category: [...currentCategories, value].join(","),
+        category: updatedCategories,
       });
     }
   };
+  useEffect(()=>{
+    console.dir(filters.category)
+  },[filters])
 
   const removeCategory = (value: string) => {
-    const currentCategories = filters.category.split(",");
+    const currentCategories = filters.category;
     const updatedCategories = currentCategories.filter(
       (item) => item !== value
     );
     setFilters({
       ...filters,
-      category: updatedCategories.join(","),
+      category: updatedCategories,
     });
   };
 
@@ -78,7 +76,7 @@ export default function TransactionsPage() {
 
   const getTransactionsData = async (start: number, limit: number) => {
     try {
-      const response: any = await api.post("/user/getTransactionData", {
+      const response = await api.post<{ success: boolean; data: Transaction[]; message?: string }>("/user/getTransactionData", {
         start,
         limit,
       });
@@ -124,38 +122,6 @@ export default function TransactionsPage() {
       return words.slice(0, 2).join(" ") + " ...";
     }
     return description;
-  };
-
-  const applyFilters = () => {
-    const filteredArray = transactionArray.filter((transaction) => {
-      const matchesDate =
-        (!filters.date ||
-          new Date(transaction.date_time).toLocaleDateString() ===
-            new Date(filters.date).toLocaleDateString()) &&
-        (!filters.startDate ||
-          new Date(transaction.date_time) >= new Date(filters.startDate)) &&
-        (!filters.endDate ||
-          new Date(transaction.date_time) <= new Date(filters.endDate));
-
-      const matchesAmount =
-        (!filters.amount ||
-          Number(transaction.amount) === Number(filters.amount)) &&
-        (!filters.minAmount ||
-          Number(transaction.amount) >= Number(filters.minAmount)) &&
-        (!filters.maxAmount ||
-          Number(transaction.amount) <= Number(filters.maxAmount));
-
-      // const matchesCategory =
-      //   !filters.category || transaction.category_name === filters.category;
-
-      const matchesType =
-        !filters.type || transaction.transaction_type === filters.type;
-
-      // return matchesDate && matchesAmount && matchesCategory && matchesType;
-    });
-
-    setTransactionArray(filteredArray);
-    setFilterOverlay(false); // Close overlay after applying filters
   };
 
   return (
@@ -528,7 +494,7 @@ export default function TransactionsPage() {
                     <select
                       className="w-full p-2 bg-gray-700 text-white rounded-lg appearance-none transition-all duration-300 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value="" // Prevent default selection
-                      onChange={(e: any) =>
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                         handleCategoryChange(e.target.value)
                       }
                     >
@@ -538,7 +504,6 @@ export default function TransactionsPage() {
                           key={category.category_id}
                           value={category.name}
                           disabled={filters.category
-                            .split(",")
                             .includes(category.name)}
                         >
                           {category.name}
@@ -549,7 +514,7 @@ export default function TransactionsPage() {
                     {/* Display selected categories as tags */}
                     {filters.category && (
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {filters.category.split(",").map((selectedCategory) => (
+                        {filters.category.map((selectedCategory) => (
                           <span
                             key={selectedCategory}
                             className="bg-blue-600 text-white px-3  rounded-full flex justify-center items-center shadow-md transition-transform transform hover:scale-105"
@@ -579,7 +544,6 @@ export default function TransactionsPage() {
                   </div>
                   <button
                     className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition"
-                    onClick={applyFilters}
                   >
                     Apply Filters
                   </button>

@@ -45,6 +45,7 @@ export default function HeroPage() {
           setUser(null);
         }
       } catch (error) {
+        console.log(error);
         setUser(null);
       }
     };

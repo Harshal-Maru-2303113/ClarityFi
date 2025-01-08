@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
   FiTrendingUp,
   FiTrendingDown,
-  FiDollarSign,
   FiPieChart,
 } from "react-icons/fi";
 import Navigation from "#/components/Navigation";

@@ -16,14 +16,6 @@ export default function TransactionPage() {
   const [categoryId, setCategoryId] = useState("");
   const [subcategoryId, setSubcategoryId] = useState("");
 
-  const data = {
-    amount,
-    transactionType,
-    description,
-    categoryId,
-    subcategoryId,
-  };
-
   const sentTransactionData = async () => {
     try {
       const data = {
@@ -33,7 +25,7 @@ export default function TransactionPage() {
         categoryId,
         subcategoryId,
       };
-      const response: any = await api.post("/user/addTransactionData", data);
+      const response = await api.post<{ success: boolean; message: string }>("/user/addTransactionData", data);
       if (response.data.success) {
         alert("Transaction added successfully!");
         router.push("/dashboard");

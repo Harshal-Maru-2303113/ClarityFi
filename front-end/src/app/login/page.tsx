@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import api from "#/utils/axios";
+import axios from "axios";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -37,8 +38,12 @@ export default function LoginPage() {
         console.log(response.data.error);
           setError(response.data.error);
       }
-    } catch (error: any) {
-      setError(error.response?.data?.error || "Login failed");
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data?.error) {
+        setError(error.response.data.error);
+      } else {
+        setError("Login failed");
+      }
       throw error;
     }
   };
@@ -48,7 +53,7 @@ export default function LoginPage() {
     try {
       await login(formData);
     } catch (error) {
-      // Error is already set in login function
+      console.error("Error during login:", error);
     }
   };
 
@@ -116,7 +121,7 @@ export default function LoginPage() {
           </button>
 
           <p className="text-center text-gray-400">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <a href="/signup" className="text-blue-500 hover:underline">
               Sign up
             </a>

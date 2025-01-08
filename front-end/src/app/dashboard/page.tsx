@@ -8,7 +8,6 @@ import {
   FiCreditCard,
   FiArrowUp,
   FiArrowDown,
-  FiChevronRight,
 } from "react-icons/fi";
 import Navigation from "#/components/Navigation";
 import Link from "next/link";
@@ -25,7 +24,7 @@ export default function Dashboard() {
 
   const getTransactionsData = async (start: number, limit: number) => {
     try {
-      const response: any = await api.post("/user/getTransactionData", {
+      const response = await api.post<{ success: boolean; data: Transaction[]; message?: string }>("/user/getTransactionData", {
         start,
         limit,
       });
@@ -69,7 +68,6 @@ export default function Dashboard() {
     }
     return description;
   };
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="flex">

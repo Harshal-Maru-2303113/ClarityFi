@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { FiMail } from "react-icons/fi";
 import api from "#/utils/axios";
 import { useRouter, useSearchParams } from "next/navigation";
+import axios from "axios";
 
 export default function VerificationPage() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -86,8 +87,14 @@ export default function VerificationPage() {
       if (response.data.success) {
         router.push('/login');
       }
-    } catch (error: any) {
-      console.log('Full server response:', error.response);
+    } catch (error: unknown) {
+      if (error instanceof Error && 'response' in error) {
+        if (axios.isAxiosError(error) && error.response) {
+          console.log('Full server response:', error.response);
+        }
+      } else {
+        console.log('An unknown error occurred:', error);
+      }
       setOtp(['', '', '', '', '', '']);
       inputRefs[0]?.current?.focus();
     }
@@ -98,15 +105,19 @@ export default function VerificationPage() {
       const response = await api.post('/auth/resend-otp', { email });
       console.dir(response.data);
       alert("Otp resent successfully");
-    } catch (error: any) {
-      console.log('Resend error:', error.response?.data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
+        console.log('Resend error:', error.response.data);
+      } else {
+        console.log('An unknown error occurred:', error);
+      }
       // Add error notification
       alert("Failed to resend OTP. Please try again.");
     }
   };
 
   // Add visual feedback for verification status
-  const [verificationStatus, setVerificationStatus] = useState<string>('');
+  const [verificationStatus] = useState<string>('');
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
@@ -130,7 +141,7 @@ export default function VerificationPage() {
               Email Verification
             </h1>
             <p className="text-gray-400">
-              We've sent a verification code to your email
+              We&apos;ve sent a verification code to your email
             </p>
           </div>
 
@@ -159,7 +170,7 @@ export default function VerificationPage() {
           </button>
 
           <div className="text-center text-gray-400">
-            Didn't receive the code?{" "}
+            Didn&apos;t receive the code?{" "}
             <button
               type="button"
               onClick={handleResendOTP}

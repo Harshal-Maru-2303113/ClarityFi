@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FiPieChart, FiTrendingUp, FiAlertCircle } from "react-icons/fi";
+import { FiPieChart, FiTrendingUp } from "react-icons/fi";
 import Navigation from "#/components/Navigation";
 
 export default function BudgetPage() {
